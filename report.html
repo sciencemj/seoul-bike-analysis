@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="ko" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>따릉이 사용 현황 분석 — 결과 리포트</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Hanken+Grotesk:wght@400;500;600;700&family=IBM+Plex+Sans+KR:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<script src="https://unpkg.com/lucide@latest"></script>
+<style>
+/* ===== Design tokens — Personal Design System (warm earth-tone, terracotta) ===== */
+:root{
+  --accent-50:#FDF1E8;--accent-100:#FBDFC8;--accent-200:#F6BE91;--accent-300:#F19C5C;
+  --accent-400:#ED7E33;--accent:#E8682B;--accent-600:#CE551E;--accent-700:#A84417;--accent-soft:#FBEEE2;
+  --canvas:#FAF6F0;--surface:#FFFFFF;--surface-2:#F3ECE0;
+  --ink:#221C16;--ink-2:#4A4036;--muted:#80735F;--border:#E8DECE;--border-2:#D8CBB5;
+  --viz-orange:#E8682B;--viz-clay:#C2613F;--viz-sand:#D9A441;--viz-olive:#7E8A4B;
+  --viz-teal:#4E8A7E;--viz-slate:#5E6E8A;--viz-mauve:#B0746A;--viz-brown:#6B4B33;
+  --success:#5E8A52;--warning:#D9A441;--danger:#C5503B;--info:#4E8A7E;
+  --r-xs:6px;--r-sm:10px;--r-md:14px;--r-lg:20px;--r-xl:28px;--r-pill:999px;
+  --s-1:4px;--s-2:8px;--s-3:12px;--s-4:16px;--s-5:24px;--s-6:32px;--s-7:48px;--s-8:64px;--s-9:96px;
+  --shadow-sm:0 1px 2px rgba(60,42,24,.06),0 1px 1px rgba(60,42,24,.04);
+  --shadow-md:0 4px 14px rgba(60,42,24,.08),0 2px 4px rgba(60,42,24,.05);
+  --shadow-lg:0 14px 34px rgba(60,42,24,.12),0 4px 10px rgba(60,42,24,.07);
+  --shadow-raised:inset 0 1px 0 rgba(255,255,255,.7),0 6px 16px rgba(60,42,24,.10);
+  --font-display:"Space Grotesk","IBM Plex Sans KR",system-ui,sans-serif;
+  --font-body:"Hanken Grotesk","IBM Plex Sans KR",system-ui,sans-serif;
+  --font-mono:"JetBrains Mono",ui-monospace,monospace;
+}
+[data-theme="dark"]{
+  --accent:#F2783A;--accent-600:#E8682B;--accent-soft:#2E2017;
+  --canvas:#1B1611;--surface:#251E18;--surface-2:#2F271F;
+  --ink:#F3EBDD;--ink-2:#C9BCA8;--muted:#998A75;--border:#392F26;--border-2:#4A3E31;
+  --shadow-sm:0 1px 2px rgba(0,0,0,.40);--shadow-md:0 4px 14px rgba(0,0,0,.45);
+  --shadow-lg:0 14px 34px rgba(0,0,0,.55);--shadow-raised:inset 0 1px 0 rgba(255,255,255,.06),0 6px 16px rgba(0,0,0,.5);
+}
+*,*::before,*::after{box-sizing:border-box}
+body{margin:0;background:var(--canvas);color:var(--ink);font-family:var(--font-body);
+  font-size:16px;line-height:1.6;-webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
+  transition:background .3s,color .3s}
+h1,h2,h3,h4{font-family:var(--font-display);font-weight:600;line-height:1.14;letter-spacing:-.015em;margin:0;text-wrap:balance}
+p{text-wrap:pretty;margin:0}
+a{color:var(--accent);text-decoration:none}
+.tnum{font-variant-numeric:tabular-nums;font-feature-settings:"tnum" 1}
+.wrap{max-width:1080px;margin:0 auto;padding:0 28px}
+
+/* nav */
+nav{position:sticky;top:0;z-index:30;background:color-mix(in srgb,var(--canvas) 82%,transparent);
+  backdrop-filter:blur(12px);border-bottom:1px solid var(--border)}
+.nav-in{display:flex;align-items:center;justify-content:space-between;height:62px}
+.brand{display:flex;align-items:center;gap:9px;font-family:var(--font-display);font-weight:700;font-size:17px;letter-spacing:-.02em}
+.brand .mk{width:26px;height:26px;border-radius:8px;background:var(--accent);display:grid;place-items:center;
+  color:#fff;box-shadow:var(--shadow-accent,0 8px 18px rgba(232,104,43,.3))}
+.brand .mk svg{width:15px;height:15px}
+.brand .dot{color:var(--accent)}
+.icon-btn{display:inline-flex;align-items:center;justify-content:center;width:38px;height:38px;border-radius:var(--r-md);
+  border:1px solid var(--border-2);background:var(--surface);color:var(--muted);cursor:pointer;box-shadow:var(--shadow-sm);
+  transition:transform .2s,color .15s}
+.icon-btn:hover{color:var(--ink);transform:translateY(-1px)}
+.icon-btn svg{width:18px;height:18px}
+
+/* eyebrow */
+.eyebrow{display:inline-flex;align-items:center;gap:8px;font-family:var(--font-mono);font-size:12px;
+  letter-spacing:.08em;text-transform:uppercase;color:var(--accent);font-weight:500}
+.eyebrow .pulse{width:7px;height:7px;border-radius:50%;background:var(--accent);
+  box-shadow:0 0 0 0 rgba(232,104,43,.5);animation:pulse 2.4s ease-out infinite}
+@keyframes pulse{0%{box-shadow:0 0 0 0 rgba(232,104,43,.5)}70%{box-shadow:0 0 0 8px rgba(232,104,43,0)}100%{box-shadow:0 0 0 0 rgba(232,104,43,0)}}
+
+/* hero */
+.hero{position:relative;padding:74px 0 40px;overflow:hidden}
+.glow{position:absolute;top:-140px;left:50%;transform:translateX(-50%);width:760px;height:420px;
+  background:radial-gradient(ellipse at center,rgba(232,104,43,.18),rgba(232,104,43,0) 68%);pointer-events:none}
+.hero-grid{position:relative;display:grid;grid-template-columns:1.05fr .95fr;gap:46px;align-items:center}
+h1.title{font-family:var(--font-display);font-weight:700;font-size:50px;line-height:1.05;letter-spacing:-.025em;margin:18px 0 0}
+h1.title em{font-style:normal;color:var(--accent)}
+.lead{margin:20px 0 0;font-size:17px;line-height:1.6;color:var(--ink-2);max-width:480px}
+.hero-meta{display:flex;gap:30px;margin-top:30px;flex-wrap:wrap}
+.hero-meta .v{font-family:var(--font-mono);font-size:24px;font-weight:600}
+.hero-meta .v small{font-size:14px;color:var(--muted)}
+.hero-meta .k{font-size:12px;color:var(--muted);margin-top:2px}
+
+/* panel (dashboard preview) */
+.panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-xl);box-shadow:var(--shadow-raised);padding:20px}
+.panel-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:6px}
+.panel-title{font-size:13px;font-weight:600;color:var(--ink-2);display:flex;align-items:center;gap:8px}
+.panel-title .dotg{width:8px;height:8px;border-radius:50%;background:var(--success)}
+.big-num{font-family:var(--font-mono);font-size:32px;font-weight:600;margin:6px 0 0;letter-spacing:-.01em}
+.big-num .u{font-size:15px;color:var(--muted)}
+.delta{font-family:var(--font-mono);font-size:12px;color:var(--success)}
+.panel img{width:100%;display:block;border-radius:var(--r-md);margin-top:8px}
+.stat-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-top:14px}
+.stat{background:var(--surface-2);border:1px solid var(--border);border-radius:var(--r-md);padding:10px 12px}
+.stat .v{font-family:var(--font-mono);font-size:16px;font-weight:600}
+.stat .k{font-size:11px;color:var(--muted);margin-top:1px}
+
+/* badges / pills */
+.badge{display:inline-flex;align-items:center;gap:5px;padding:3px 10px;border-radius:var(--r-pill);
+  font-family:var(--font-mono);font-size:11px;font-weight:500;background:var(--accent-soft);color:var(--accent-700)}
+.tag{padding:4px 11px;border-radius:var(--r-pill);background:var(--surface-2);border:1px solid var(--border);
+  font-size:12px;font-weight:500;color:var(--ink-2)}
+
+/* sections */
+section.block{padding:46px 0}
+.sec-head{margin-bottom:24px}
+.sec-head h2{font-size:30px;letter-spacing:-.02em}
+.sec-head p{color:var(--muted);margin-top:8px;font-size:15px;max-width:680px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.grid-3{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);padding:24px}
+.card.raised{box-shadow:var(--shadow-raised)}
+.card h3{font-size:18px;margin-bottom:8px;display:flex;align-items:center;gap:9px}
+.card h3 .ic{width:30px;height:30px;border-radius:9px;background:var(--accent-soft);color:var(--accent-700);
+  display:grid;place-items:center;flex:none}
+.card h3 .ic svg{width:16px;height:16px}
+.card p{color:var(--ink-2);font-size:14.5px}
+.fig{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-md);
+  padding:16px;overflow:hidden}
+.fig img{width:100%;display:block;border-radius:var(--r-md)}
+.cap{color:var(--muted);font-size:13px;margin-top:12px;line-height:1.55}
+.cap b{color:var(--ink);font-weight:600}
+
+/* metric strip */
+.metrics{display:grid;grid-template-columns:repeat(4,1fr);gap:16px}
+.metric{background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);box-shadow:var(--shadow-sm);padding:20px}
+.metric .k{font-family:var(--font-mono);font-size:11px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.metric .v{font-family:var(--font-mono);font-size:30px;font-weight:600;margin-top:8px;letter-spacing:-.01em}
+.metric .v small{font-size:15px;color:var(--muted);font-weight:500}
+.metric .s{font-size:12.5px;color:var(--ink-2);margin-top:4px}
+
+/* bars */
+.bars{display:flex;flex-direction:column;gap:11px;margin-top:6px}
+.bar-row{display:grid;grid-template-columns:78px 1fr 52px;align-items:center;gap:12px}
+.bar-row .lab{font-size:13px;color:var(--ink-2)}
+.bar-track{height:12px;background:var(--surface-2);border-radius:var(--r-pill);overflow:hidden}
+.bar-fill{height:100%;border-radius:var(--r-pill);background:var(--accent)}
+.bar-row .pct{font-family:var(--font-mono);font-size:12.5px;color:var(--ink);text-align:right}
+
+/* split (gender) */
+.split{display:flex;height:42px;border-radius:var(--r-pill);overflow:hidden;border:1px solid var(--border);margin-top:8px}
+.split div{display:flex;align-items:center;justify-content:center;color:#fff;font-family:var(--font-mono);font-size:13px;font-weight:600}
+
+/* table */
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{text-align:left;padding:11px 12px;border-bottom:1px solid var(--border)}
+th{font-family:var(--font-mono);font-size:11px;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.num,th.num{text-align:right;font-family:var(--font-mono);font-variant-numeric:tabular-nums}
+tbody tr:hover{background:var(--surface-2)}
+td .util{font-family:var(--font-mono);font-weight:600;color:var(--accent-700)}
+
+/* insight list */
+.insights{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.ins{display:flex;gap:14px;background:var(--surface);border:1px solid var(--border);border-radius:var(--r-lg);
+  box-shadow:var(--shadow-sm);padding:18px 20px}
+.ins .n{font-family:var(--font-mono);font-weight:600;color:var(--accent);font-size:14px;flex:none;
+  width:30px;height:30px;border-radius:9px;background:var(--accent-soft);display:grid;place-items:center}
+.ins h4{font-size:15.5px;margin-bottom:4px}
+.ins p{font-size:13.5px;color:var(--ink-2)}
+
+footer{border-top:1px solid var(--border);padding:34px 0;color:var(--muted);font-size:13px}
+footer .mono{font-family:var(--font-mono)}
+
+@media(max-width:860px){
+  .hero-grid,.grid-2,.insights{grid-template-columns:1fr}
+  .metrics{grid-template-columns:1fr 1fr}
+  .grid-3{grid-template-columns:1fr}
+  h1.title{font-size:38px}
+}
+</style>
+</head>
+<body>
+<nav>
+  <div class="wrap nav-in">
+    <div class="brand">
+      <span class="mk"><i data-lucide="bike"></i></span>
+      <span>따릉이 인사이트<span class="dot">.</span></span>
+    </div>
+    <button class="icon-btn" id="theme" aria-label="테마 전환"><i data-lucide="moon"></i></button>
+  </div>
+</nav>
+
+<header class="hero">
+  <div class="glow"></div>
+  <div class="wrap hero-grid">
+    <div>
+      <span class="eyebrow"><span class="pulse"></span>서울 공공자전거 · 2023–2025 · 36개월</span>
+      <h1 class="title">따릉이 대여소는<br><em>수요</em>를 따라가고 있나.</h1>
+      <p class="lead">대여소 위치·월별 이용 데이터를 결합해 공간 분포의 정합성을 진단하고,
+        미래 수요를 예측해 <b>증설·재배치 우선순위</b>를 도출한 분석 결과 리포트.</p>
+      <div class="hero-meta tnum">
+        <div class="m"><div class="v">2,933<small> 개</small></div><div class="k">분석 대여소</div></div>
+        <div class="m"><div class="v">4,203<small> 만건/년</small></div><div class="k">연 대여건수</div></div>
+        <div class="m"><div class="v">22,943<small> 톤</small></div><div class="k">연 탄소절감</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <div class="panel-head">
+        <span class="panel-title"><span class="dotg"></span>월별 전체 대여건수</span>
+        <span class="badge">2023.01–2025.12</span>
+      </div>
+      <div class="big-num tnum">529<span class="u">만건</span> <span class="delta">▲ 성수기 피크 (23.10)</span></div>
+      <img src="report_assets/fig_trend.png" alt="월별 대여건수 추이">
+      <div class="stat-row tnum">
+        <div class="stat"><div class="v">36</div><div class="k">개월</div></div>
+        <div class="stat"><div class="v">3개</div><div class="k">연주기</div></div>
+        <div class="stat"><div class="v">3.5×</div><div class="k">겨울→여름</div></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main>
+<!-- 문제 & 목적 -->
+<section class="block"><div class="wrap">
+  <div class="grid-2">
+    <div class="card raised">
+      <h3><span class="ic"><i data-lucide="help-circle"></i></span>문제</h3>
+      <p>따릉이는 대여소 기반 서비스라 <b>대여소의 위치·밀도가 곧 사용자 접근성</b>이다.
+        그러나 대여소가 실제 수요에 맞게 배치돼 있는지에 대한 정량 근거가 부족하다.
+        수요-공급 불일치는 이용 불편, 재배치 운영비 증가, 신규 투자 비효율로 이어진다.</p>
+    </div>
+    <div class="card raised">
+      <h3><span class="ic"><i data-lucide="target"></i></span>목적</h3>
+      <p>이용 현황을 공간·시계열로 분석해 ① 현재 분포의 <b>수요-공급 정합성</b> 진단,
+        ② <b>신규 대여소 필요 여부·추천 위치</b> 도출, ③ 수요 <b>예측</b> 기반 선제 운영 지원.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 데이터 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">DATA</span>
+    <h2 style="margin-top:10px">데이터 출처</h2>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h3><span class="ic"><i data-lucide="map-pin"></i></span>대여소 마스터 · OA-21235</h3>
+      <p><span class="badge">OpenAPI · tbCycleStationInfo</span></p>
+      <p style="margin-top:12px">좌표·자치구·거치대수. 라이브 수집 <b>3,230개</b> 대여소(거치대 38,331개).</p>
+    </div>
+    <div class="card">
+      <h3><span class="ic"><i data-lucide="database"></i></span>이용정보 월별 · OA-15248</h3>
+      <p><span class="badge">CSV → 집계</span></p>
+      <p style="margin-top:12px">대여소 × 성별 × 연령대 × 대여구분별 이용건수·이동거리·탄소량. 2023–2025 반기 파일 집계.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 계절성 -->
+<section class="block"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">FINDING 01</span>
+    <h2 style="margin-top:10px">강한 연주기 — 겨울 저점, 여름·가을 성수기</h2>
+    <p>3년간 동일 패턴이 반복된다. 겨울(1–2월) 최저, 5–6월·9–10월 피크. 한겨울 대비 성수기 약 3.5배.</p>
+  </div>
+  <div class="fig">
+    <img src="report_assets/fig_trend.png" alt="월별 전체 대여건수 추이 2023-2025">
+    <p class="cap">월별 전체 대여건수(2023-01 ~ 2025-12). <b>2023-10 약 529만 건</b>으로 최고, 겨울 저점은 약 160만 건. 안정적 계절 구조라 계절형 시계열 모델에 적합.</p>
+  </div>
+</div></section>
+
+<!-- 공간 분포 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">FINDING 02</span>
+    <h2 style="margin-top:10px">공간 불균형 — 이용량은 소수 대여소에 집중</h2>
+    <p>대여소 자체도 도심·한강변에 조밀하지만, 이용량은 그보다 더 일부 대여소에 쏠린다.
+      자치구 단위로 보면 공급(대여소 수)과 수요(대여건수)가 어긋나는 구가 드러난다.</p>
+  </div>
+  <div class="grid-2">
+    <div class="fig">
+      <img src="report_assets/fig_map.png" alt="대여소별 월평균 이용량 지도">
+      <p class="cap"><b>대여소별 월평균 대여건수</b> — 색·크기가 클수록 고수요. 한강공원·업무지구·대학가 핫스팟.</p>
+    </div>
+    <div class="fig">
+      <img src="report_assets/fig_quadrant.png" alt="자치구별 공급 vs 수요 4분면">
+      <p class="cap"><b>자치구 공급 vs 수요</b> — 좌상단(대여소 적은데 수요 높음)=공급 부족 후보, 우하단(대여소 많은데 수요 낮음)=공급 과잉 후보.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 세그먼트 -->
+<section class="block"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">FINDING 03</span>
+    <h2 style="margin-top:10px">이용자 세그먼트 — 20–30대·정기권 중심</h2>
+    <p>성별·연령대·대여구분 분해. 주력층과 이용 성격이 운영·마케팅 타깃을 결정한다.</p>
+  </div>
+  <div class="grid-3">
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="users"></i></span>연령대 비중</h3>
+      <div class="bars" style="margin-top:14px">
+        <div class="bar-row"><span class="lab">20대</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="pct">29.8%</span></div>
+        <div class="bar-row"><span class="lab">30대</span><div class="bar-track"><div class="bar-fill" style="width:86.6%"></div></div><span class="pct">25.8%</span></div>
+        <div class="bar-row"><span class="lab">40대</span><div class="bar-track"><div class="bar-fill" style="width:52.7%"></div></div><span class="pct">15.7%</span></div>
+        <div class="bar-row"><span class="lab">50대</span><div class="bar-track"><div class="bar-fill" style="width:36.6%"></div></div><span class="pct">10.9%</span></div>
+        <div class="bar-row"><span class="lab">~10대</span><div class="bar-track"><div class="bar-fill" style="width:20.8%"></div></div><span class="pct">6.2%</span></div>
+        <div class="bar-row"><span class="lab">60대+</span><div class="bar-track"><div class="bar-fill" style="width:14.4%"></div></div><span class="pct">4.3%</span></div>
+      </div>
+      <p class="cap"><b>20–30대가 55.6%</b> — 청장년 생활·통근 이용이 핵심.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="ticket"></i></span>대여구분</h3>
+      <div class="bars" style="margin-top:14px">
+        <div class="bar-row"><span class="lab">정기권</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="pct">83.2%</span></div>
+        <div class="bar-row"><span class="lab">일일권</span><div class="bar-track"><div class="bar-fill" style="width:19.1%;background:var(--viz-teal)"></div></div><span class="pct">15.9%</span></div>
+        <div class="bar-row"><span class="lab">기타</span><div class="bar-track"><div class="bar-fill" style="width:1.1%;background:var(--viz-sand)"></div></div><span class="pct">0.9%</span></div>
+      </div>
+      <p class="cap"><b>정기권 83%</b> → 생활·통근 중심. 일일권(관광·레저)은 여름·가을에 더 뾰족.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="venus-and-mars"></i></span>성별 · 이용 강도</h3>
+      <div class="split">
+        <div style="width:63.6%;background:var(--viz-slate)">남 63.6%</div>
+        <div style="width:36.4%;background:var(--viz-mauve)">여 36.4%</div>
+      </div>
+      <div class="stat-row tnum" style="margin-top:16px">
+        <div class="stat"><div class="v">2.36<small style="font-size:11px"> km</small></div><div class="k">평균 이동거리/건</div></div>
+        <div class="stat"><div class="v">22,943<small style="font-size:11px"> t</small></div><div class="k">연 탄소절감</div></div>
+      </div>
+      <p class="cap">남성 비중이 높고 1회 평균 ~2.4km 이동. 연 수천만 건 이용으로 큰 <b>탄소 절감 효익</b>.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 모델 비교 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">FINDING 04 · 방법 3</span>
+    <h2 style="margin-top:10px">수요 예측 — 단순 계절 베이스라인이 최강</h2>
+    <p>마지막 6개월 홀드아웃 백테스트(MAPE, 낮을수록 정확). 36개월(3주기)이라 계절형 모델도 포함해 동일 조건 비교.</p>
+  </div>
+  <div class="grid-2">
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="bar-chart-3"></i></span>모델별 오차 (MAPE %)</h3>
+      <div class="bars" style="margin-top:16px">
+        <div class="bar-row"><span class="lab">seasonal_naive</span><div class="bar-track"><div class="bar-fill" style="width:46%;background:var(--success)"></div></div><span class="pct">14.5</span></div>
+        <div class="bar-row"><span class="lab">SARIMA</span><div class="bar-track"><div class="bar-fill" style="width:56%"></div></div><span class="pct">17.6</span></div>
+        <div class="bar-row"><span class="lab">naive</span><div class="bar-track"><div class="bar-fill" style="width:93%;background:var(--viz-clay)"></div></div><span class="pct">29.4</span></div>
+        <div class="bar-row"><span class="lab">holt_winters</span><div class="bar-track"><div class="bar-fill" style="width:100%;background:var(--danger)"></div></div><span class="pct">31.6</span></div>
+      </div>
+    </div>
+    <div class="card raised">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="lightbulb"></i></span>해석</h3>
+      <p><b>전년 동월 반복(seasonal_naive)이 최저 오차</b>(14.5%), SARIMA가 근접 2위. 계절 패턴이 안정적이라
+        단순 베이스라인이 강하다 — <b>복잡 모델이 항상 이기지 않는다</b>는 점을 검증.</p>
+      <p style="margin-top:12px">운영 예측에는 불확실 구간을 제공하는 <b>SARIMA</b>를 사용하되, 모든 신규 모델은
+        이 베이스라인을 이겨야 채택. 날씨·인구 등 외생변수로 머신러닝 확장 여지.</p>
+    </div>
+  </div>
+</div></section>
+
+<!-- 추천 -->
+<section class="block"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">RECOMMENDATION · 방법 4</span>
+    <h2 style="margin-top:10px">증설·재배치 후보 — 수요 대비 거치대 상위</h2>
+    <p>다음 시즌 예측 수요가 평균 이상이면서 거치대 대비 수요(util = 예측건수 / 거치대수)가 높은 대여소.
+      결품 위험이 커 거치대 증설 또는 인근 신설이 필요한 1순위.</p>
+  </div>
+  <div class="card" style="padding:8px 8px 4px">
+    <table class="tnum">
+      <thead><tr><th>대여소</th><th>자치구</th><th class="num">예측 대여(건/월)</th><th class="num">거치대</th><th class="num">util</th></tr></thead>
+      <tbody>
+        <tr><td>발산역 6번 출구 뒤</td><td>강서구</td><td class="num">3,580</td><td class="num">6</td><td class="num"><span class="util">596.7</span></td></tr>
+        <tr><td>명덕고교입구(영종빌딩)</td><td>강서구</td><td class="num">4,568</td><td class="num">8</td><td class="num"><span class="util">571.0</span></td></tr>
+        <tr><td>장한평역 3번출구</td><td>동대문구</td><td class="num">3,798</td><td class="num">10</td><td class="num"><span class="util">379.9</span></td></tr>
+        <tr><td>영문초등학교 사거리</td><td>영등포구</td><td class="num">4,495</td><td class="num">12</td><td class="num"><span class="util">374.6</span></td></tr>
+        <tr><td>자양2동 주민센터</td><td>광진구</td><td class="num">1,090</td><td class="num">3</td><td class="num"><span class="util">363.3</span></td></tr>
+        <tr><td>마곡나루역 2번 출구</td><td>강서구</td><td class="num">8,906</td><td class="num">25</td><td class="num"><span class="util">356.2</span></td></tr>
+        <tr><td>장한평역 8번 출구 앞</td><td>성동구</td><td class="num">2,840</td><td class="num">8</td><td class="num"><span class="util">355.0</span></td></tr>
+        <tr><td>서울축산농협(장안지점)</td><td>동대문구</td><td class="num">3,540</td><td class="num">10</td><td class="num"><span class="util">354.0</span></td></tr>
+      </tbody>
+    </table>
+  </div>
+  <p class="cap">※ 거치대수는 현재 마스터 기준, 예측 수요는 전년 동월(2025-01) 대용. 강서·동대문에 후보 집중.</p>
+</div></section>
+
+<!-- 인사이트 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow">BUSINESS INSIGHT</span>
+    <h2 style="margin-top:10px">결론 — 의사결정으로의 연결</h2>
+  </div>
+  <div class="insights">
+    <div class="ins"><span class="n">1</span><div><h4>공간 불균형 확인</h4><p>대여소·이용량 모두 도심·한강변 집중, 외곽 희소. "사용자 친화적 분포"라 보기 어려운 지역 존재.</p></div></div>
+    <div class="ins"><span class="n">2</span><div><h4>신규 대여소 우선순위</h4><p>자치구 4분면 좌상단(고수요·저공급) + 예측 수요 평균 이상 대여소의 저밀도 인접지부터.</p></div></div>
+    <div class="ins"><span class="n">3</span><div><h4>거치대 재배치</h4><p>util 상위 대여소는 결품 위험 → 우하단(저수요·고공급) 자원과 맞교환해 운영비 절감.</p></div></div>
+    <div class="ins"><span class="n">4</span><div><h4>선제 운영</h4><p>계절 예측상 봄·여름 반등 → 성수기 직전 핫스팟에 자전거 사전 배치(rebalancing)로 결품률↓.</p></div></div>
+    <div class="ins"><span class="n">5</span><div><h4>세그먼트 맞춤</h4><p>주력 20–30대·정기권(생활·통근). 일일권(관광·레저)은 한강변 여름 급증 → 대여소 성격별 차등 운영.</p></div></div>
+    <div class="ins"><span class="n">6</span><div><h4>사회적 효익</h4><p>연 4,203만 건·약 22,943톤 탄소절감 → 예산 정당화·ESG 보고 근거로 활용.</p></div></div>
+  </div>
+</div></section>
+
+<!-- 한계 · 문제 재정의 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow" style="color:var(--warning)"><i data-lucide="alert-triangle" style="width:14px;height:14px"></i>&nbsp;LIMITATION · 문제 정의 재고</span>
+    <h2 style="margin-top:10px">한계 — 문제를 잘못 정의했을 수 있다</h2>
+    <p>가장 큰 한계는 데이터가 아니라 <b>출발점의 문제 정의</b>다. 본 연구는 "대여소가 수요에 맞게 배치됐나(수요-공급 mismatch)"를 전제했지만,
+      분석 결과는 오히려 그 전제가 약하다는 것을 보여준다.</p>
+  </div>
+
+  <div class="card raised" style="border-left:4px solid var(--accent);background:var(--accent-soft)">
+    <h3><span class="ic"><i data-lucide="refresh-ccw"></i></span>재정의: 진짜 문제는 "공급"이 아니라 "경쟁 우위"</h3>
+    <p style="color:var(--ink-2)">따릉이의 핵심 과제는 대여소 부족이 아니라 <b>다른 이동 수단(지하철·버스·도보·전동킥보드·택시)과의 차별화·경쟁 우위</b>에 가깝다.
+      "어디에 대여소를 더 놓을까"는 이미 거의 해결된 질문에 가깝고, "사람들이 왜 따릉이 대신/함께 무엇을 타는가"가 답해야 할 질문이다.</p>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <div class="fig">
+      <img src="report_assets/fig_linear.png" alt="자치구 거치대 vs 수요 선형 관계">
+      <p class="cap"><b>공급은 이미 수요를 선형으로 추종</b> — 자치구 거치대 수와 월평균 대여건수의 상관 <b>r = 0.92</b>(대여소 수–수요 r = 0.83).
+        즉 구조적 수요-공급 불일치는 크지 않다.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="search-x"></i></span>그래서 본 분석이 놓친 것</h3>
+      <div class="bars" style="margin-top:6px">
+        <div class="bar-row"><span class="lab" style="width:auto">집계(구) 매칭</span><div class="bar-track"><div class="bar-fill" style="width:92%"></div></div><span class="pct">r .92</span></div>
+        <div class="bar-row"><span class="lab" style="width:auto">대여소 매칭</span><div class="bar-track"><div class="bar-fill" style="width:39%;background:var(--viz-slate)"></div></div><span class="pct">r .39</span></div>
+      </div>
+      <p class="cap" style="margin-top:14px">자치구 수준에선 거의 완전 매칭, 대여소 수준에선 r = 0.39로 노이즈가 남는다.
+        하지만 이건 <b>미세 조정 여지</b>일 뿐 전략적 레버가 아니다. 증설·재배치(방법 4)의 실효 효과는 제한적일 가능성이 높다.</p>
+    </div>
+  </div>
+
+  <div class="grid-2" style="margin-top:20px">
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="database-zap"></i></span>경쟁력을 측정할 데이터가 없었다</h3>
+      <p>본 연구 데이터(대여소·이용건수)로는 경쟁 우위를 잴 수 없다. 빠진 것:
+        ① 개별 통행(OD)·통행 목적, ② 지하철·버스·PM 등 <b>경쟁 수단 분담률·대체 관계</b>,
+        ③ 날씨·요금·소득, ④ <b>이용자 이탈/재방문</b>·구독 유지율. 이게 없으면 "왜 타는가/안 타는가"를 답할 수 없다.</p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="compass"></i></span>다시 잡아야 할 연구 질문</h3>
+      <p>다음 연구는 배치가 아니라 <b>모달 경쟁·보완</b>으로 재설정한다:
+        ① 지하철 first/last-mile에서 따릉이가 보완재인가 대체재인가, ② PM(킥보드) 진입 후 따릉이 수요 변화,
+        ③ 날씨 보정 수요·가격 탄력성, ④ 신규 가입자 <b>재방문·이탈</b> 곡선으로 본 제품 경쟁력.</p>
+    </div>
+  </div>
+
+  <p class="cap" style="margin-top:18px;font-size:13.5px">
+    <b>요약</b> — 분석 자체는 유효하나(공급≈수요 확인), 그 결론이 곧 "문제 정의가 적절했다"를 뜻하진 않는다.
+    수요-공급 매칭이 이미 좋다는 사실은 역설적으로 <b>이 프레임으로는 개선 여지가 작다</b>는 신호이며,
+    따릉이의 다음 의사결정은 <b>경쟁 우위·이용자 유지</b> 쪽으로 옮겨가야 한다.
+  </p>
+</div></section>
+
+<!-- 외부 근거 · 추후 연구 -->
+<section class="block" style="padding-top:0"><div class="wrap">
+  <div class="sec-head">
+    <span class="eyebrow"><i data-lucide="newspaper" style="width:14px;height:14px"></i>&nbsp;EVIDENCE · 외부 근거</span>
+    <h2 style="margin-top:10px">현실도 같은 신호 — 기후동행카드가 따릉이를 대체했다</h2>
+    <p>2026년 1월 보도(오마이뉴스)는 본 연구의 재정의를 뒷받침한다. 대중교통 무제한권 <b>기후동행카드</b> 확산 후
+      따릉이 수요가 급감했고, 그 원인은 대여소 부족이 아니라 <b>경쟁 수단으로의 이탈</b>이었다.</p>
+  </div>
+
+  <div class="grid-2">
+    <div class="card raised" style="border-left:4px solid var(--info)">
+      <h3 style="font-size:16px"><span class="ic" style="background:color-mix(in srgb,var(--info) 16%,transparent);color:var(--info)"><i data-lucide="quote"></i></span>보도 요지</h3>
+      <p style="color:var(--ink-2)">2025년 따릉이 일평균 대여 <b>10만 2,392회</b>로 전년比 <b>약 15% 감소</b>(8개월이 10%↑ 감소).
+        주원인은 기후동행카드(월 6.2만원, 대중교통 무제한). 전동킥보드(PM)도 위축, 반면 자동차 교통량 감소는 0.5%에 그쳐
+        <b>대중교통이 자동차가 아닌 따릉이·PM을 대체</b>한 구도.</p>
+      <p style="border-left:3px solid var(--border-2);padding-left:12px;margin-top:14px;color:var(--muted);font-size:14px;font-style:italic">
+        "어차피 매일 기후동행카드를 써야 한다면 보조 용도로 지하철을 타는 게 이득"</p>
+      <p class="cap" style="margin-top:14px">출처: 백진우, 「날씨 더 따뜻, 킥보드도 줄었는데… 따릉이 이용량 15% 감소, 왜?」, 오마이뉴스, 2026-01-17.
+        <a href="https://www.ohmynews.com/NWS_Web/View/at_pg.aspx?CNTN_CD=A0003198812" target="_blank" rel="noopener">기사 보기 ↗</a></p>
+    </div>
+    <div class="card">
+      <h3 style="font-size:16px"><span class="ic"><i data-lucide="trending-down"></i></span>본 데이터도 동일 결과</h3>
+      <p>처리한 2023–2025 데이터가 기사 수치를 그대로 재현한다 — 공급(대여소·거치대)은 안정인데 수요만 꺾였다.</p>
+      <div class="bars" style="margin-top:14px">
+        <div class="bar-row"><span class="lab">2023</span><div class="bar-track"><div class="bar-fill" style="width:100%"></div></div><span class="pct">4,490만</span></div>
+        <div class="bar-row"><span class="lab">2024</span><div class="bar-track"><div class="bar-fill" style="width:97.7%"></div></div><span class="pct">4,385만</span></div>
+        <div class="bar-row"><span class="lab">2025</span><div class="bar-track"><div class="bar-fill" style="width:83.2%;background:var(--danger)"></div></div><span class="pct">3,737만</span></div>
+      </div>
+      <div class="stat-row tnum" style="margin-top:16px">
+        <div class="stat"><div class="v" style="color:var(--danger)">−14.8%</div><div class="k">2024→2025 수요</div></div>
+        <div class="stat"><div class="v">102,391</div><div class="k">2025 일평균(건)</div></div>
+        <div class="stat"><div class="v">≈ 0</div><div class="k">거치대 공급 변화</div></div>
+      </div>
+      <p class="cap" style="margin-top:12px">기사의 <b>일평균 102,392회·−15%</b>와 거의 일치. 수요-공급 프레임으론 설명 못 하는 하락 = <b>모달 경쟁의 증거</b>.</p>
+    </div>
+  </div>
+
+  <div class="sec-head" style="margin-top:40px">
+    <span class="eyebrow"><i data-lucide="git-branch" style="width:14px;height:14px"></i>&nbsp;FUTURE WORK</span>
+    <h2 style="margin-top:10px">여기서 뻗어나오는 추후 연구 주제</h2>
+    <p>"배치"가 아니라 "경쟁·대체"로 질문을 옮긴다. 기후동행카드 사례가 자연 실험(natural experiment)을 제공한다.</p>
+  </div>
+  <div class="insights">
+    <div class="ins"><span class="n">A</span><div><h4>공공이동수단 vs 따릉이 수요 비교</h4><p>지하철·버스·PM의 시공간 수요와 따릉이 수요를 나란히 놓고 <b>대체/보완 탄력성</b> 추정.</p></div></div>
+    <div class="ins"><span class="n">B</span><div><h4>기후동행카드 도입 효과 인과 분석</h4><p>도입 전후·지역 차이를 활용한 <b>이중차분(DiD)</b>으로 따릉이 수요 단절 효과를 인과 추정.</p></div></div>
+    <div class="ins"><span class="n">C</span><div><h4>무제한권 가입자 이탈 코호트</h4><p>기후동행카드 가입 시점 기준 따릉이 <b>재방문·이탈 곡선</b> — 누가 떠나고 누가 남는가.</p></div></div>
+    <div class="ins"><span class="n">D</span><div><h4>날씨·요금 통제 후 순수 경쟁효과</h4><p>기온·강수·요금을 통제해 <b>모달 선택의 순수 효과</b>만 분리.</p></div></div>
+    <div class="ins"><span class="n">E</span><div><h4>따릉이 고유 강점 영역</h4><p>지하철 사각지대·단거리 <b>first/last-mile</b>·운동 효용에서 따릉이가 우위인 구간 식별.</p></div></div>
+    <div class="ins"><span class="n">F</span><div><h4>정책 시나리오 시뮬레이션</h4><p>기후동행카드에 따릉이 <b>통합·연계</b> 시 수요 회복 폭을 시뮬레이션해 정책 제언.</p></div></div>
+  </div>
+</div></section>
+</main>
+
+<footer><div class="wrap">
+  <div class="brand" style="margin-bottom:10px"><span class="mk"><i data-lucide="bike"></i></span><span>따릉이 인사이트<span class="dot">.</span></span></div>
+  <p class="mono">분석 기간 2023-01 ~ 2025-12 (36개월) · 데이터 서울 열린데이터광장 OA-21235 / OA-15248 ·
+    한계: 개별 통행(OD)·날씨 미반영, 거치대수 현재 기준. 다음 단계로 외생변수 결합 예측·재배치 최적화.</p>
+</div></footer>
+
+<script>
+  const root=document.documentElement;
+  const saved=localStorage.getItem("ddr-theme");
+  if(saved)root.setAttribute("data-theme",saved);
+  function sync(){const d=root.getAttribute("data-theme")==="dark";
+    document.getElementById("theme").innerHTML='<i data-lucide="'+(d?"sun":"moon")+'"></i>';
+    if(window.lucide)lucide.createIcons();}
+  document.getElementById("theme").addEventListener("click",()=>{
+    const n=root.getAttribute("data-theme")==="dark"?"light":"dark";
+    root.setAttribute("data-theme",n);localStorage.setItem("ddr-theme",n);sync();});
+  if(window.lucide)lucide.createIcons();
+  sync();
+</script>
+</body>
+</html>
